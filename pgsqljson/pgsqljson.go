@@ -19,7 +19,7 @@
  *
  */
 
-package sqljson
+package pgsqljson
 
 import (
 	"database/sql"
@@ -30,7 +30,7 @@ import (
 	"strings"
 )
 
-func checkFields(mapstring map[string]string, reqfields []string) string {
+func CheckFields(mapstring map[string]string, reqfields []string) string {
 	log.Print("checkFields: starting required fields check")
 	errstring := ""
 	for _, key := range reqfields {
@@ -45,7 +45,7 @@ func checkFields(mapstring map[string]string, reqfields []string) string {
 	return errstring
 }
 
-func processResults(rows *sql.Rows) (string, error) {
+func ProcessResults(rows *sql.Rows) (string, error) {
 	log.Print("processResults: processing results from sql")
 
 	var err error
@@ -86,7 +86,7 @@ func processResults(rows *sql.Rows) (string, error) {
 	return jsonString, nil
 }
 
-func sendJsonhttp(jsonstr string, urlstr string) (string, error) {
+func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	log.Print("sendJsonhttp request: ", jsonstr, " ", urlstr)
 	var err error
 
