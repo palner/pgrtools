@@ -54,7 +54,7 @@ func processResults(rows *sql.Rows) (string, error) {
 	list := make([]map[string]interface{}, 0)
 	for rows.Next() {
 		vals := make([]interface{}, len(cols))
-		for i, _ := range cols {
+		for i := range cols {
 			var s string
 			vals[i] = &s
 		}
@@ -81,13 +81,13 @@ func processResults(rows *sql.Rows) (string, error) {
 
 	if err != nil {
 		return "error", err
-	} else {
-		return jsonString, nil
 	}
+
+	return jsonString, nil
 }
 
-func SendJsonHttp(jsonstr string, urlstr string) (string, error) {
-	log.Print("SendJsonHttp request: ", jsonstr, " ", urlstr)
+func sendJsonhttp(jsonstr string, urlstr string) (string, error) {
+	log.Print("sendJsonhttp request: ", jsonstr, " ", urlstr)
 	var err error
 
 	// send json to url
@@ -111,8 +111,8 @@ func SendJsonHttp(jsonstr string, urlstr string) (string, error) {
 		// handle err
 		log.Print(err)
 		return "error", err
-	} else {
-		log.Print("reloadusers response -> ", string(curlBody))
-		return string(curlBody), nil
 	}
+
+	log.Print("curl response -> ", string(curlBody))
+	return string(curlBody), nil
 }
