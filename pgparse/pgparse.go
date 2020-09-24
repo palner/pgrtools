@@ -24,6 +24,7 @@ package pgparse
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"strings"
@@ -65,9 +66,7 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 
 func GetUUID() string {
 	u := uuid.New()
-	var us string
-	us = u.String()
-	return us
+	return fmt.Sprintf("%s", u.String())
 }
 
 func LowerKeys(keyVal map[string]string) map[string]string {
