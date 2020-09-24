@@ -65,7 +65,9 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 
 func GetUUID() string {
 	u := uuid.New()
-	return u.String()
+	var us string
+	us = u.String()
+	return us
 }
 
 func LowerKeys(keyVal map[string]string) map[string]string {
