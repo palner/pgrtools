@@ -59,7 +59,7 @@ func GetHtable(tableval string, urlval string) (string, error) {
 }
 
 func GetRegs(urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump",, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump", "id":1}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
