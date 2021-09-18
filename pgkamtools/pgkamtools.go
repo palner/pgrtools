@@ -38,7 +38,7 @@ func GetAOR(aorval string, urlval string) (string, error) {
 		return "", err
 	}
 
-	parsed, err := regAorParse(aorresult)
+	parsed, err := RegAorParse(aorresult)
 
 	if err != nil {
 		return "", err
