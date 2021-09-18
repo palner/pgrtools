@@ -30,7 +30,7 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	}
 }
 
-func getAOR(aorval string, urlval string) (string, error) {
+func GetAOR(aorval string, urlval string) (string, error) {
 	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
 	aorresult, err := SendJsonhttp(sendjson, urlval)
 
@@ -47,7 +47,7 @@ func getAOR(aorval string, urlval string) (string, error) {
 	return parsed, nil
 }
 
-func getHtable(tableval string, urlval string) (string, error) {
+func GetHtable(tableval string, urlval string) (string, error) {
 	sendjson := `{"jsonrpc": "2.0", "method": "htable.dump", "params":{"name":"` + tableval + `"}, "id":1}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
@@ -58,7 +58,7 @@ func getHtable(tableval string, urlval string) (string, error) {
 	return htableresult, nil
 }
 
-func getRegs(urlval string) (string, error) {
+func GetRegs(urlval string) (string, error) {
 	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump",, "id":1}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
@@ -69,7 +69,7 @@ func getRegs(urlval string) (string, error) {
 	return htableresult, nil
 }
 
-func htableParseNameOnly(jsonval string) (string, error) {
+func HtableParseNameOnly(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -78,7 +78,7 @@ func htableParseNameOnly(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func htableParseNameValue(jsonval string) (string, error) {
+func HtableParseNameValue(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -87,7 +87,7 @@ func htableParseNameValue(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func regsAors(jsonval string) (string, error) {
+func RegsAors(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -96,7 +96,7 @@ func regsAors(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func regAorParse(jsonval string) (string, error) {
+func RegAorParse(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -105,7 +105,7 @@ func regAorParse(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func regsFullContactInfo(jsonval string) (string, error) {
+func RegsFullContactInfo(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -114,7 +114,7 @@ func regsFullContactInfo(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func regsSimpleParse(jsonval string) (string, error) {
+func RegsSimpleParse(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -123,7 +123,7 @@ func regsSimpleParse(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func regsTotal(jsonval string) (string, error) {
+func RegsTotal(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
@@ -132,7 +132,7 @@ func regsTotal(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func removeDuplicatesUnordered(elements []string) []string {
+func RemoveDuplicatesUnordered(elements []string) []string {
 	encountered := map[string]bool{}
 
 	// Create a map of all unique elements.
