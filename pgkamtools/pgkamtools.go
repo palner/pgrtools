@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -129,7 +130,8 @@ func RegsTotal(jsonval string) (string, error) {
 	}
 
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.Stats.Records")
-	return parsedval.String(), nil
+	var value string = strconv.FormatFloat(parsedval.Float(), 'E', -1, 32)
+	return value, nil
 }
 
 func RemoveDuplicatesUnordered(elements []string) []string {
