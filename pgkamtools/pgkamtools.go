@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -88,6 +87,15 @@ func HtableParseNameValue(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
+func HtableParseValueOnly(jsonval string) (string, error) {
+	if !gjson.Valid(jsonval) {
+		return "", errors.New("invalid json")
+	}
+
+	parsedval := gjson.Get(jsonval, "result.#.slot.#[@flatten].value")
+	return parsedval.String(), nil
+}
+
 func RegsAors(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
@@ -129,9 +137,8 @@ func RegsTotal(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.Stats.Records")
-	var value string = strconv.FormatFloat(parsedval.Float(), 'E', -1, 32)
-	return value, nil
+	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.Stats.{Total_Registered:Records}")
+	return parsedval.String(), nil
 }
 
 func RemoveDuplicatesUnordered(elements []string) []string {
@@ -161,11 +168,13 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	if err != nil {
 		// handle err
 		log.Print(err)
+		return "", err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Print(err)
+		return "", err
 	}
 
 	defer resp.Body.Close()
@@ -177,6 +186,5 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 		return "error", err
 	}
 
-	log.Print("curl response -> ", string(curlBody))
 	return string(curlBody), nil
 }
