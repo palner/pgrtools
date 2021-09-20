@@ -30,24 +30,18 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	}
 }
 
-func GetAOR(aorval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
-	aorresult, err := SendJsonhttp(sendjson, urlval)
+func HtableDelete(tableval string, keyval string, urlval string) (bool, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.delete", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":1}`
+	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
-	parsed, err := RegAorParse(aorresult)
-
-	if err != nil {
-		return "", err
-	}
-
-	return parsed, nil
+	return true, nil
 }
 
-func GetHtable(tableval string, urlval string) (string, error) {
+func HtableDump(tableval string, urlval string) (string, error) {
 	sendjson := `{"jsonrpc": "2.0", "method": "htable.dump", "params":{"name":"` + tableval + `"}, "id":1}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
@@ -58,15 +52,52 @@ func GetHtable(tableval string, urlval string) (string, error) {
 	return htableresult, nil
 }
 
-func GetRegs(urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump", "id":1}`
-	htableresult, err := SendJsonhttp(sendjson, urlval)
+func HtableFlush(tableval string, urlval string) (bool, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.flush", "params":{"htable":"` + tableval + `"}, "id":1}`
+	_, err := SendJsonhttp(sendjson, urlval)
 
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func HtableGet(tableval string, keyval string, urlval string) (string, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.get", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":1}`
+	getval, err := SendJsonhttp(sendjson, urlval)
 	if err != nil {
 		return "", err
 	}
 
-	return htableresult, nil
+	parse, err := HtableParseValueSingle(getval)
+	if err != nil {
+		return "", err
+	}
+
+	return parse, nil
+}
+
+func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + valval + `"}, "id":1}`
+	_, err := SendJsonhttp(sendjson, urlval)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func HtableSetString(tableval string, keyval string, valval string, urlval string) (bool, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + valval + `"}, "id":1}`
+	_, err := SendJsonhttp(sendjson, urlval)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func HtableParseNameOnly(jsonval string) (string, error) {
@@ -96,13 +127,41 @@ func HtableParseValueOnly(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
-func RegsAors(jsonval string) (string, error) {
+func HtableParseValueSingle(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.Info.AoR")
+	parsedval := gjson.Get(jsonval, "result.item.{value:value}")
 	return parsedval.String(), nil
+}
+
+func RegDeleteAOR(aorval string, urlval string) (bool, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.rm", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
+	_, err := SendJsonhttp(sendjson, urlval)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func RegGetAOR(aorval string, urlval string) (string, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
+	aorresult, err := SendJsonhttp(sendjson, urlval)
+
+	if err != nil {
+		return "", err
+	}
+
+	parsed, err := RegAorParse(aorresult)
+
+	if err != nil {
+		return "", err
+	}
+
+	return parsed, nil
 }
 
 func RegAorParse(jsonval string) (string, error) {
@@ -114,6 +173,15 @@ func RegAorParse(jsonval string) (string, error) {
 	return parsedval.String(), nil
 }
 
+func RegsAors(jsonval string) (string, error) {
+	if !gjson.Valid(jsonval) {
+		return "", errors.New("invalid json")
+	}
+
+	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.Info.AoR")
+	return parsedval.String(), nil
+}
+
 func RegsFullContactInfo(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
@@ -121,6 +189,17 @@ func RegsFullContactInfo(jsonval string) (string, error) {
 
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.{Info.AoR,Info.Contacts}.@ugly")
 	return parsedval.String(), nil
+}
+
+func RegsGet(urlval string) (string, error) {
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump", "id":1}`
+	htableresult, err := SendJsonhttp(sendjson, urlval)
+
+	if err != nil {
+		return "", err
+	}
+
+	return htableresult, nil
 }
 
 func RegsSimpleParse(jsonval string) (string, error) {
