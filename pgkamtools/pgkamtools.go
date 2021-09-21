@@ -79,7 +79,7 @@ func HtableGet(tableval string, keyval string, urlval string) (string, error) {
 }
 
 func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + valval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":"` + valval + `"}, "id":1}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -90,7 +90,7 @@ func HtableSetInt(tableval string, keyval string, valval string, urlval string) 
 }
 
 func HtableSetString(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + valval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":"` + valval + `"}, "id":1}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
