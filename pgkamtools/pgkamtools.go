@@ -105,7 +105,7 @@ func HtableParseNameOnly(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.#.slot.#[@flatten].name")
+	parsedval := gjson.Get(jsonval, "{\"result\":result.#.slot.#[@flatten].name}")
 	return parsedval.String(), nil
 }
 
@@ -123,7 +123,7 @@ func HtableParseValueOnly(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.#.slot.#[@flatten].value")
+	parsedval := gjson.Get(jsonval, "{\"result\":result.#.slot.#[@flatten].value}")
 	return parsedval.String(), nil
 }
 
