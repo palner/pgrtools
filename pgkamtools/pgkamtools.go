@@ -267,3 +267,36 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 
 	return string(curlBody), nil
 }
+
+//
+// send a get request via http and return the response
+//
+func SendGethttp(urlstr string) (string, error) {
+	var err error
+
+	req, err := http.NewRequest("GET", urlstr, nil)
+
+	if err != nil {
+		// handle err
+		log.Print(err)
+		return "error", err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Print(err)
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		// handle err
+		log.Print(err)
+		return "error", err
+	}
+
+	// log.Print("curl response -> ", string(curlBody))
+	return string(curlBody), nil
+}
