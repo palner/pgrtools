@@ -25,7 +25,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -101,4 +103,56 @@ func ParseBody(body []byte) map[string]string {
 	}
 
 	return bodyVal
+}
+
+func ParseBodyErr(body []byte) (map[string]string, error) {
+	bodyVal := make(map[string]string)
+	log.Println("ParseBody: parsing body")
+	if json.Valid(body) {
+		log.Println("ParseBody: body is json")
+		json.Unmarshal(body, &bodyVal)
+	} else {
+		if strings.Contains(string(body), "&") {
+			log.Println("ParseBody: splitting based on &")
+			stringsplit := strings.Split(string(body), "&")
+			for _, pair := range stringsplit {
+				z := strings.Split(pair, "=")
+				decodedValue, err := url.QueryUnescape(z[1])
+				if err != nil {
+					bodyVal[z[0]] = z[1]
+				} else {
+					bodyVal[z[0]] = decodedValue
+				}
+			}
+		} else {
+			log.Println("ParseBody: unable to parse body")
+			return bodyVal, errors.New("unable to parse body. is it nil?")
+		}
+	}
+
+	return bodyVal, nil
+}
+
+func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, error) {
+	bodyVal := make(map[string]string)
+	log.Println("ParseBodyFields: parsing body")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println("ParseBodyFields: error reading body:", err.Error())
+		return bodyVal, err
+	}
+
+	bodyVal, err = ParseBodyErr(body)
+	if err != nil {
+		log.Println("ParseBodyFields: error parsing body:", err.Error())
+		return bodyVal, err
+	}
+
+	_, err = CheckFields(bodyVal, reqfields)
+	if err != nil {
+		log.Println("ParseBodyFields: error parsing body:", err.Error())
+		return bodyVal, err
+	}
+
+	return bodyVal, nil
 }
