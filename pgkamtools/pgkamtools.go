@@ -78,6 +78,7 @@ func HtableGet(tableval string, keyval string, urlval string) (string, error) {
 	return parse, nil
 }
 
+// changed 2023-01-18 to treat string as int in json for seti.
 func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
 	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":` + valval + `}, "id":1}`
 	_, err := SendJsonhttp(sendjson, urlval)
