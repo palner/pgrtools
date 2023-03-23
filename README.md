@@ -9,17 +9,21 @@ pgrtools (aka Palner Group tools) are designed to help with commonly needed func
 ## Usage Example
 
 ```go
+...
 	import (
-        ...
-        "github.com/palner/pgrtools/pgparse"
-        "github.com/palner/pgrtools/pgsqljson"
-        ...
-    )
+		...
+		"github.com/palner/pgrtools/pgparse"
+		"github.com/palner/pgrtools/pgsqljson"
+		...
+	)
+...
 ```
 
 ```go
-    requiredfields := []string{"ipaddress", "shortnote"}
+...
+	requiredfields := []string{"ipaddress", "shortnote"}
 	keyVal, err := pgparse.ParseBodyFields(r, requiredfields)
+...
 ```
 
 ## License 
@@ -38,4 +42,4 @@ pgrtools is distributed in the hope that it will be useful, but WITHOUT ANY WARR
 
 The Palner Group, Inc.  
 Phone: +1 (212) 937-7844  
-Matrix: #support:matrix.lod.com
+Matrix: [#help:matrix.lod.com](https://matrix.to/#/#help:matrix.lod.com)
