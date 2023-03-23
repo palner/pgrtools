@@ -108,3 +108,14 @@ Receives a r `http.Request` and parses all form fields. Returns a map[string]str
 ```go
 keyVal, err := pgparse.PgParseForm(r)
 ```
+
+### PgParseFormFields
+
+Receives a r `http.Request` and required fields `[]string`. Parses all form fields and checks for required fields. Returns a map[string]string, error.
+
+#### PgParseFormFields Example
+
+```go
+requiredfields := []string{"email", "name", "age"}
+keyVal, err := pgparse.PgParseFormFields(r, requiredfields)
+```

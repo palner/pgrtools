@@ -160,13 +160,35 @@ func PgParseForm(r *http.Request) (map[string]string, error) {
 	bodyVal := make(map[string]string)
 	err := r.ParseForm()
 	if err != nil {
-		log.Println("ParseForm: error received -", err)
+		log.Println("PgParseForm: error received -", err)
 		return bodyVal, err
 	}
 
 	for key := range r.Form {
-		log.Println("ParseForm:", key, r.FormValue(key))
+		log.Println("PgParseForm:", key, r.FormValue(key))
 		bodyVal[key] = r.FormValue(key)
+	}
+
+	return bodyVal, nil
+}
+
+func PgParseFormFields(r *http.Request, reqfields []string) (map[string]string, error) {
+	bodyVal := make(map[string]string)
+	err := r.ParseForm()
+	if err != nil {
+		log.Println("PgParseFormFields: error received -", err)
+		return bodyVal, err
+	}
+
+	for key := range r.Form {
+		log.Println("PgParseFormFields:", key, r.FormValue(key))
+		bodyVal[key] = r.FormValue(key)
+	}
+
+	_, err = CheckFields(bodyVal, reqfields)
+	if err != nil {
+		log.Println("PgParseFormFields: error parsing body:", err.Error())
+		return bodyVal, err
 	}
 
 	return bodyVal, nil
