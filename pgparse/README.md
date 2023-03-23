@@ -85,7 +85,7 @@ if err != nil {
     ...
 }
 
-keyVal, err := pgparse.ParseBody(body)
+keyVal, err := pgparse.ParseBodyErr(body)
 ```
 
 ### ParseBodyFields
@@ -96,7 +96,7 @@ Receives a r `http.Request` and required fields `[]string`. Returns a map[string
 
 ```go
 requiredfields := []string{"email", "name", "age"}
-keyVal, err := pgparse.ParseBody(r, requiredfields)
+keyVal, err := pgparse.ParseBodyFields(r, requiredfields)
 ```
 
 ### PgParseForm
