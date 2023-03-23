@@ -23,7 +23,7 @@ type SimpleJsonString struct {
 	Json string
 }
 
-func checkGuiaccess(r *http.Request, cookiename string) (string, error) {
+func checkGuiaccess(r *http.Request, cookiename string, jwtKey byte) (string, error) {
 	log.Print("checkGuiaccess: checking cookie", cookiename, "for token")
 
 	// We can obtain the session token from the requests cookies, which come with every request
@@ -33,7 +33,7 @@ func checkGuiaccess(r *http.Request, cookiename string) (string, error) {
 		return "", err
 	}
 
-	_, err = checkToken(tknStr)
+	_, err = checkToken(tknStr, jwtKey)
 	if err != nil {
 		log.Println("checkGuiaccess: token error", err.Error())
 		return "", err

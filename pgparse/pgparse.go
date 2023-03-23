@@ -24,8 +24,7 @@ package pgparse
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -68,7 +67,7 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 
 func GetUUID() string {
 	u := uuid.New()
-	return fmt.Sprintf("%s", u.String())
+	return u.String()
 }
 
 func LowerKeys(keyVal map[string]string) map[string]string {
@@ -136,7 +135,7 @@ func ParseBodyErr(body []byte) (map[string]string, error) {
 func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, error) {
 	bodyVal := make(map[string]string)
 	log.Println("ParseBodyFields: parsing body")
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println("ParseBodyFields: error reading body:", err.Error())
 		return bodyVal, err
@@ -152,6 +151,22 @@ func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, er
 	if err != nil {
 		log.Println("ParseBodyFields: error parsing body:", err.Error())
 		return bodyVal, err
+	}
+
+	return bodyVal, nil
+}
+
+func PgParseForm(r *http.Request) (map[string]string, error) {
+	bodyVal := make(map[string]string)
+	err := r.ParseForm()
+	if err != nil {
+		log.Println("ParseForm: error received -", err)
+		return bodyVal, err
+	}
+
+	for key := range r.Form {
+		log.Println("ParseForm:", key, r.FormValue(key))
+		bodyVal[key] = r.FormValue(key)
 	}
 
 	return bodyVal, nil
