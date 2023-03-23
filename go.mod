@@ -1,4 +1,4 @@
-module pgrtools
+module github.com/palner/pgrtools
 
 go 1.20
 
