@@ -106,5 +106,5 @@ Receives a r `http.Request` and parses all form fields. Returns a map[string]str
 #### PgParseForm Example
 
 ```go
-keyVal, err := pgparse.ParseBody(r)
+keyVal, err := pgparse.PgParseForm(r)
 ```
