@@ -208,7 +208,7 @@ func RegsSimpleParse(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.{Info.AoR,Info.Contacts.#[@flatten].Contact.Address,Info.Contacts.#[@flatten].Contact.Expires}")
+	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.Info.{aor:AoR,details:Contacts.#.Contact.{address:Address,ua:User-Agent,expires:Expires,last-modified:Last-Modified}}")
 	return parsedval.String(), nil
 }
 
@@ -269,9 +269,7 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	return string(curlBody), nil
 }
 
-//
 // send a get request via http and return the response
-//
 func SendGethttp(urlstr string) (string, error) {
 	var err error
 
