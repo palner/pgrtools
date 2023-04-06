@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tidwall/gjson"
 )
@@ -31,7 +33,7 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 }
 
 func HtableDelete(tableval string, keyval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.delete", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.delete", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":` + getId() + `}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -42,7 +44,7 @@ func HtableDelete(tableval string, keyval string, urlval string) (bool, error) {
 }
 
 func HtableDump(tableval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.dump", "params":{"name":"` + tableval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.dump", "params":{"name":"` + tableval + `"}, "id":` + getId() + `}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -53,7 +55,7 @@ func HtableDump(tableval string, urlval string) (string, error) {
 }
 
 func HtableFlush(tableval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.flush", "params":{"htable":"` + tableval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.flush", "params":{"htable":"` + tableval + `"}, "id":` + getId() + `}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -64,7 +66,7 @@ func HtableFlush(tableval string, urlval string) (bool, error) {
 }
 
 func HtableGet(tableval string, keyval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.get", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.get", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":` + getId() + `}`
 	getval, err := SendJsonhttp(sendjson, urlval)
 	if err != nil {
 		return "", err
@@ -80,7 +82,7 @@ func HtableGet(tableval string, keyval string, urlval string) (string, error) {
 
 // changed 2023-01-18 to treat string as int in json for seti.
 func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":` + valval + `}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":` + valval + `}, "id":` + getId() + `}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -91,7 +93,7 @@ func HtableSetInt(tableval string, keyval string, valval string, urlval string) 
 }
 
 func HtableSetString(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":"` + valval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":"` + valval + `"}, "id":` + getId() + `}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -138,7 +140,7 @@ func HtableParseValueSingle(jsonval string) (string, error) {
 }
 
 func RegDeleteAOR(aorval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.rm", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.rm", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":` + getId() + `}`
 	_, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -149,7 +151,7 @@ func RegDeleteAOR(aorval string, urlval string) (bool, error) {
 }
 
 func RegGetAOR(aorval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":` + getId() + `}`
 	aorresult, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -193,7 +195,7 @@ func RegsFullContactInfo(jsonval string) (string, error) {
 }
 
 func RegsGet(urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump", "id":1}`
+	sendjson := `{"jsonrpc": "2.0", "method": "ul.dump", "id":` + getId() + `}`
 	htableresult, err := SendJsonhttp(sendjson, urlval)
 
 	if err != nil {
@@ -298,4 +300,10 @@ func SendGethttp(urlstr string) (string, error) {
 
 	// log.Print("curl response -> ", string(curlBody))
 	return string(curlBody), nil
+}
+
+func getId() string {
+	timenow := time.Now().UnixMicro()
+	timenowstr := strconv.FormatInt(timenow, 10)
+	return timenowstr
 }
