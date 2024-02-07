@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) {
@@ -32,9 +33,80 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	}
 }
 
+func DispatcherAdd(groupval string, addressval string, urlval string) (string, error) {
+	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.add")
+	sendJson, _ = sjson.Set(sendJson, "params.group", groupval)
+	sendJson, _ = sjson.Set(sendJson, "params.address", addressval)
+	sendJson, _ = sjson.Set(sendJson, "id", getId())
+
+	results, err := SendJsonhttp(sendJson, urlval)
+	if err != nil {
+		return "", err
+	}
+
+	return results, nil
+}
+
+func DispatcherList(groupval string, urlval string) (string, error) {
+	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.list")
+	sendJson, _ = sjson.Set(sendJson, "id", getId())
+
+	results, err := SendJsonhttp(sendJson, urlval)
+	if err != nil {
+		return "", err
+	}
+
+	return results, nil
+
+}
+
+func DispatcherListSimple(groupval string, urlval string) (string, error) {
+	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.list")
+	sendJson, _ = sjson.Set(sendJson, "id", getId())
+
+	results, err := SendJsonhttp(sendJson, urlval)
+	if err != nil {
+		return "", err
+	}
+
+	if !gjson.Valid(results) {
+		return "", errors.New("invalid response from kamailio")
+	}
+
+	resultJson := gjson.Get(results, "result.RECORDS.#[@flatten].SET.TARGETS.#.DEST.URI")
+	var jsonResult string
+	for _, nodeValue := range resultJson.Array() {
+		jsonResult, _ = sjson.Set(jsonResult, "nodes.-1", nodeValue.Str)
+	}
+
+	return jsonResult, nil
+}
+
+func DispatcherRemove(groupval string, addressval string, urlval string) (string, error) {
+	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.remove")
+	sendJson, _ = sjson.Set(sendJson, "params.group", groupval)
+	sendJson, _ = sjson.Set(sendJson, "params.address", addressval)
+	sendJson, _ = sjson.Set(sendJson, "id", getId())
+
+	results, err := SendJsonhttp(sendJson, urlval)
+	if err != nil {
+		return "", err
+	}
+
+	return results, nil
+}
+
 func HtableDelete(tableval string, keyval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.delete", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":` + getId() + `}`
-	_, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.delete")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.key", keyval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	_, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return false, err
@@ -44,8 +116,11 @@ func HtableDelete(tableval string, keyval string, urlval string) (bool, error) {
 }
 
 func HtableDump(tableval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.dump", "params":{"name":"` + tableval + `"}, "id":` + getId() + `}`
-	htableresult, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.dump")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	htableresult, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return "", err
@@ -55,8 +130,11 @@ func HtableDump(tableval string, urlval string) (string, error) {
 }
 
 func HtableFlush(tableval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.flush", "params":{"htable":"` + tableval + `"}, "id":` + getId() + `}`
-	_, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.flush")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	_, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return false, err
@@ -66,8 +144,13 @@ func HtableFlush(tableval string, urlval string) (bool, error) {
 }
 
 func HtableGet(tableval string, keyval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.get", "params":{"htable":"` + tableval + `", "key":"` + keyval + `"}, "id":` + getId() + `}`
-	getval, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.get")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.key", keyval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	getval, err := SendJsonhttp(sendJsonStr, urlval)
+
 	if err != nil {
 		return "", err
 	}
@@ -82,8 +165,13 @@ func HtableGet(tableval string, keyval string, urlval string) (string, error) {
 
 // changed 2023-01-18 to treat string as int in json for seti.
 func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.seti", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":` + valval + `}, "id":` + getId() + `}`
-	_, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.seti")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.key", keyval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.value", valval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	_, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return false, err
@@ -93,8 +181,13 @@ func HtableSetInt(tableval string, keyval string, valval string, urlval string) 
 }
 
 func HtableSetString(tableval string, keyval string, valval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "htable.sets", "params":{"htable":"` + tableval + `", "key":"` + keyval + `", "value":"` + valval + `"}, "id":` + getId() + `}`
-	_, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.sets")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.key", keyval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.value", valval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	_, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return false, err
@@ -140,8 +233,12 @@ func HtableParseValueSingle(jsonval string) (string, error) {
 }
 
 func RegDeleteAOR(aorval string, urlval string) (bool, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.rm", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":` + getId() + `}`
-	_, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "ul.rm")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.table", "location")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.AOR", aorval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	_, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return false, err
@@ -151,8 +248,12 @@ func RegDeleteAOR(aorval string, urlval string) (bool, error) {
 }
 
 func RegGetAOR(aorval string, urlval string) (string, error) {
-	sendjson := `{"jsonrpc": "2.0", "method": "ul.lookup", "params":{"table":"location", "AOR":"` + aorval + `"}, "id":` + getId() + `}`
-	aorresult, err := SendJsonhttp(sendjson, urlval)
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "ul.lookup")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.table", "location")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.AOR", aorval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	aorresult, err := SendJsonhttp(sendJsonStr, urlval)
 
 	if err != nil {
 		return "", err
@@ -300,6 +401,52 @@ func SendGethttp(urlstr string) (string, error) {
 
 	// log.Print("curl response -> ", string(curlBody))
 	return string(curlBody), nil
+}
+
+func Uptime(urlval string) (string, error) {
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "core.uptime")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	results, err := SendJsonhttp(sendJsonStr, urlval)
+
+	if err != nil {
+		return "", err
+	}
+
+	uptimeResult, err := UptimeParse(results)
+	return uptimeResult, nil
+}
+
+func UptimeParse(jsonval string) (string, error) {
+	if !gjson.Valid(jsonval) {
+		return "", errors.New("invalid json")
+	}
+
+	parsedval := gjson.Get(jsonval, "result.uptime")
+	return parsedval.String(), nil
+}
+
+func Version(urlval string) (string, error) {
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "core.version")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	results, err := SendJsonhttp(sendJsonStr, urlval)
+
+	if err != nil {
+		return "", err
+	}
+
+	versionResult, err := VersionParse(results)
+	return versionResult, nil
+}
+
+func VersionParse(jsonval string) (string, error) {
+	if !gjson.Valid(jsonval) {
+		return "", errors.New("invalid json")
+	}
+
+	parsedval := gjson.Get(jsonval, "result")
+	return parsedval.String(), nil
 }
 
 func getId() string {
