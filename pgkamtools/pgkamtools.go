@@ -2,7 +2,7 @@ package pgkamtools
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -260,7 +260,7 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	}
 
 	defer resp.Body.Close()
-	curlBody, err := ioutil.ReadAll(resp.Body)
+	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		// handle err
@@ -290,7 +290,7 @@ func SendGethttp(urlstr string) (string, error) {
 	}
 
 	defer resp.Body.Close()
-	curlBody, err := ioutil.ReadAll(resp.Body)
+	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		// handle err
