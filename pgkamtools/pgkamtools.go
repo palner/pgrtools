@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021	The Palner Group, Inc. (palner.com)
- *						Fred Posner (@fredposner)
+ * Copyright (C) 2021, 2024	The Palner Group, Inc. (palner.com)
+ *							Fred Posner (@fredposner)
  *
  * pgkamtools is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
