@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021	The Palner Group, Inc. (palner.com)
+ *						Fred Posner (@fredposner)
+ *
+ * pgkamtools is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version
+ *
+ * pgkamtools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 package pgkamtools
 
 import (
@@ -48,7 +68,7 @@ func DispatcherAdd(groupval string, addressval string, urlval string) (string, e
 	return results, nil
 }
 
-func DispatcherList(groupval string, urlval string) (string, error) {
+func DispatcherList(urlval string) (string, error) {
 	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
 	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.list")
 	sendJson, _ = sjson.Set(sendJson, "id", getId())
@@ -62,7 +82,7 @@ func DispatcherList(groupval string, urlval string) (string, error) {
 
 }
 
-func DispatcherListSimple(groupval string, urlval string) (string, error) {
+func DispatcherListSimple(urlval string) (string, error) {
 	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
 	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.list")
 	sendJson, _ = sjson.Set(sendJson, "id", getId())
@@ -83,6 +103,24 @@ func DispatcherListSimple(groupval string, urlval string) (string, error) {
 	}
 
 	return jsonResult, nil
+}
+
+func DispatcherListByGroup(urlval string) (string, error) {
+	sendJson, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJson, _ = sjson.Set(sendJson, "method", "dispatcher.list")
+	sendJson, _ = sjson.Set(sendJson, "id", getId())
+
+	results, err := SendJsonhttp(sendJson, urlval)
+	if err != nil {
+		return "", err
+	}
+
+	if !gjson.Valid(results) {
+		return "", errors.New("invalid response from kamailio")
+	}
+
+	resultJson := gjson.Get(results, "result.RECORDS.#.SET.{id:ID,nodes:TARGETS.#.{uri:DEST.URI,flags:DEST.FLAGS,priority:DEST.PRIORITY,latency:DEST.LATENCY.AVG}}")
+	return resultJson.Str, nil
 }
 
 func DispatcherRemove(groupval string, addressval string, urlval string) (string, error) {
@@ -334,9 +372,10 @@ func RemoveDuplicatesUnordered(elements []string) []string {
 
 	// Place all keys from the map into a slice.
 	result := []string{}
-	for key, _ := range encountered {
+	for key := range encountered {
 		result = append(result, key)
 	}
+
 	return result
 }
 
@@ -413,7 +452,7 @@ func Uptime(urlval string) (string, error) {
 		return "", err
 	}
 
-	uptimeResult, err := UptimeParse(results)
+	uptimeResult, _ := UptimeParse(results)
 	return uptimeResult, nil
 }
 
@@ -436,7 +475,7 @@ func Version(urlval string) (string, error) {
 		return "", err
 	}
 
-	versionResult, err := VersionParse(results)
+	versionResult, _ := VersionParse(results)
 	return versionResult, nil
 }
 
