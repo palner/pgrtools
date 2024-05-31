@@ -120,7 +120,7 @@ func DispatcherListByGroup(urlval string) (string, error) {
 	}
 
 	resultJson := gjson.Get(results, "result.RECORDS.#.SET.{id:ID,nodes:TARGETS.#.{uri:DEST.URI,flags:DEST.FLAGS,priority:DEST.PRIORITY,latency:DEST.LATENCY.AVG}}")
-	return resultJson.Str, nil
+	return resultJson.String(), nil
 }
 
 func DispatcherRemove(groupval string, addressval string, urlval string) (string, error) {
