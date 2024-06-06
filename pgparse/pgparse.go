@@ -50,7 +50,12 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 
 	for _, key := range reqfields {
 		if _, exists := mapstring[key]; exists {
-			log.Printf("checkfields: %s exists in map and has the value %v", key, mapstring[key])
+			if mapstring[key] != "" {
+				//log.Printf("checkfields: %s exists in map and has the value %v", key, mapstring[key])
+			} else {
+				log.Printf("checkfields: %s exists but has no value %v", key, mapstring[key])
+				errstring += key + " is missing. "
+			}
 		} else {
 			log.Printf("checkfields: %s is not found", key)
 			errstring += key + " is missing. "
