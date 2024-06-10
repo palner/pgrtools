@@ -31,6 +31,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jaevor/go-nanoid"
 )
 
 func Last10(val string) string {
@@ -68,6 +69,28 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	} else {
 		return true, nil
 	}
+}
+
+func getNanoID() (string, error) {
+	id, err := nanoid.Standard(21)
+	if err != nil {
+		return "", err
+	} else {
+		id1 := id()
+		return id1, nil
+	}
+
+}
+
+func getNanoIDSmall() (string, error) {
+	id, err := nanoid.Standard(8)
+	if err != nil {
+		return "", err
+	} else {
+		id1 := id()
+		return id1, nil
+	}
+
 }
 
 func GetUUID() string {
