@@ -19,7 +19,7 @@ type SimpleJsonString struct {
 	Json string
 }
 
-func checkAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
+func CheckAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
 	connectingip := r.RemoteAddr
 	log.Println(connectingip, "[checkAuth] request received")
 	var token string
@@ -29,13 +29,13 @@ func checkAuth(r *http.Request, keys map[string]string, jwtKeystring string) (st
 		log.Println(connectingip, "[checkAuth] token found in body")
 		token = keys["token"]
 	} else {
-		token, err = checkBearer(r)
+		token, err = CheckBearer(r)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	_, err = checkToken(token, []byte(jwtKeystring))
+	_, err = CheckToken(token, []byte(jwtKeystring))
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +43,7 @@ func checkAuth(r *http.Request, keys map[string]string, jwtKeystring string) (st
 	return "ok", nil
 }
 
-func checkBearer(r *http.Request) (string, error) {
+func CheckBearer(r *http.Request) (string, error) {
 	connectingip := r.RemoteAddr
 
 	bearerToken := r.Header.Get("Authorization")
@@ -64,17 +64,17 @@ func checkBearer(r *http.Request) (string, error) {
 	}
 }
 
-func checkGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (string, error) {
+func CheckGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (string, error) {
 	log.Print("checkGuiaccess: checking cookie", cookiename, "for token")
 
 	// We can obtain the session token from the requests cookies, which come with every request
-	tknStr, err := checkCookie(r, cookiename)
+	tknStr, err := CheckCookie(r, cookiename)
 	if err != nil {
 		log.Println("checkGuiaccess: cookie error", err.Error())
 		return "", err
 	}
 
-	_, err = checkToken(tknStr, []byte(jwtKeystring))
+	_, err = CheckToken(tknStr, []byte(jwtKeystring))
 	if err != nil {
 		log.Println("checkGuiaccess: token error", err.Error())
 		return "", err
@@ -83,7 +83,7 @@ func checkGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (st
 	return "ok", nil
 }
 
-func checkCookie(r *http.Request, name string) (string, error) {
+func CheckCookie(r *http.Request, name string) (string, error) {
 	// Read the cookie as normal.
 	c, err := r.Cookie(name)
 	if err != nil {
@@ -101,7 +101,7 @@ func checkCookie(r *http.Request, name string) (string, error) {
 	return c.Value, nil
 }
 
-func generateToken(username string, jwtKeystring string, minutes time.Duration) (string, time.Time, error) {
+func GenerateToken(username string, jwtKeystring string, minutes time.Duration) (string, time.Time, error) {
 	log.Print("generateToken:", username, "for", minutes, "minutes")
 	// get an expiration time of minutes minutes from now
 	expirationTime := time.Now().Add(minutes * time.Minute)
@@ -129,7 +129,7 @@ func generateToken(username string, jwtKeystring string, minutes time.Duration) 
 	return tokenString, expirationTime, nil
 }
 
-func generateApitoken(username string, jwtKeystring string, days int) (string, error) {
+func GenerateApitoken(username string, jwtKeystring string, days int) (string, error) {
 	log.Print("generateApitoken:", username, "for", days, "days")
 
 	// get an expiration time days days from now
@@ -157,7 +157,7 @@ func generateApitoken(username string, jwtKeystring string, days int) (string, e
 	return tokenString, nil
 }
 
-func checkToken(tokenstr string, jwtKey []byte) (string, error) {
+func CheckToken(tokenstr string, jwtKey []byte) (string, error) {
 	log.Println("checkToken: checking token", tokenstr)
 
 	// Initialize a new instance of `Claims`
