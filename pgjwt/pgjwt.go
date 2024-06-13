@@ -76,6 +76,29 @@ func CheckBearer(r *http.Request) (string, error) {
 	}
 }
 
+func CheckBearerToken(r *http.Request, jwtKeystring string) (string, error) {
+	connectingip := r.RemoteAddr
+
+	bearerToken := r.Header.Get("Authorization")
+	if !strings.Contains(bearerToken, " ") {
+		log.Println(connectingip, "[checkBearer] valid header not found")
+		return "", errors.New("no valid header found")
+	}
+
+	reqToken := strings.Split(bearerToken, " ")[1]
+	if len(reqToken) < 10 {
+		log.Println(connectingip, "[checkBearer] no token found")
+		return "", errors.New("no token found")
+	}
+
+	_, err := CheckToken(reqToken, []byte(jwtKeystring))
+	if err != nil {
+		return "", err
+	}
+
+	return "ok", nil
+}
+
 func CheckGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (string, error) {
 	log.Print("checkGuiaccess: checking cookie", cookiename, "for token")
 
