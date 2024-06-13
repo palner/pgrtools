@@ -31,15 +31,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type Claims struct {
-	Username string `json:"username"`
-	jwt.RegisteredClaims
-}
-
-type SimpleJsonString struct {
-	Json string
-}
-
 func CheckAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
 	connectingip := r.RemoteAddr
 	log.Println(connectingip, "[checkAuth] request received")
@@ -128,6 +119,11 @@ func GenerateToken(username string, jwtKeystring string, minutes time.Duration) 
 	expirationTime := time.Now().Add(minutes * time.Minute)
 
 	// Create the JWT claims, which includes the username and expiry time
+	type Claims struct {
+		Username string `json:"username"`
+		jwt.RegisteredClaims
+	}
+
 	claims := &Claims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -156,6 +152,11 @@ func GenerateApitoken(username string, jwtKeystring string, days int) (string, e
 	// get an expiration time days days from now
 	expirationTime := time.Now().AddDate(0, 0, days)
 
+	type Claims struct {
+		Username string `json:"username"`
+		jwt.RegisteredClaims
+	}
+
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Username: username,
@@ -180,6 +181,11 @@ func GenerateApitoken(username string, jwtKeystring string, days int) (string, e
 
 func CheckToken(tokenstr string, jwtKey []byte) (string, error) {
 	log.Println("checkToken: checking token", tokenstr)
+
+	type Claims struct {
+		Username string `json:"username"`
+		jwt.RegisteredClaims
+	}
 
 	// Initialize a new instance of `Claims`
 	claims := &Claims{}
