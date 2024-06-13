@@ -4,15 +4,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
-
-type Credentials struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
-}
 
 type Claims struct {
 	Username string `json:"username"`
@@ -23,7 +19,52 @@ type SimpleJsonString struct {
 	Json string
 }
 
-func checkGuiaccess(r *http.Request, cookiename string, jwtKey byte) (string, error) {
+func checkAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
+	connectingip := r.RemoteAddr
+	log.Println(connectingip, "[checkAuth] request received")
+	var token string
+	var err error
+
+	if _, exists := keys["token"]; exists {
+		log.Println(connectingip, "[checkAuth] token found in body")
+		token = keys["token"]
+	} else {
+		token, err = checkBearer(r)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	_, err = checkToken(token, []byte(jwtKeystring))
+	if err != nil {
+		return "", err
+	}
+
+	return "ok", nil
+}
+
+func checkBearer(r *http.Request) (string, error) {
+	connectingip := r.RemoteAddr
+
+	bearerToken := r.Header.Get("Authorization")
+	if !strings.Contains(bearerToken, " ") {
+		log.Println(connectingip, "[checkBearer] valid header not found")
+		tokenerror := errors.New("no valid header found")
+		return "", tokenerror
+	}
+
+	reqToken := strings.Split(bearerToken, " ")[1]
+	if len(reqToken) < 10 {
+		log.Println(connectingip, "[checkBearer] no token found")
+		tokenerror := errors.New("no token found")
+		return "", tokenerror
+	} else {
+		log.Println(connectingip, "[checkBearer] token found in bearer header")
+		return reqToken, nil
+	}
+}
+
+func checkGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (string, error) {
 	log.Print("checkGuiaccess: checking cookie", cookiename, "for token")
 
 	// We can obtain the session token from the requests cookies, which come with every request
@@ -33,7 +74,7 @@ func checkGuiaccess(r *http.Request, cookiename string, jwtKey byte) (string, er
 		return "", err
 	}
 
-	_, err = checkToken(tknStr, jwtKey)
+	_, err = checkToken(tknStr, []byte(jwtKeystring))
 	if err != nil {
 		log.Println("checkGuiaccess: token error", err.Error())
 		return "", err
@@ -60,9 +101,8 @@ func checkCookie(r *http.Request, name string) (string, error) {
 	return c.Value, nil
 }
 
-func generateToken(username string, jwtKey byte, minutes time.Duration) (string, time.Time, error) {
+func generateToken(username string, jwtKeystring string, minutes time.Duration) (string, time.Time, error) {
 	log.Print("generateToken:", username, "for", minutes, "minutes")
-
 	// get an expiration time of minutes minutes from now
 	expirationTime := time.Now().Add(minutes * time.Minute)
 
@@ -79,7 +119,7 @@ func generateToken(username string, jwtKey byte, minutes time.Duration) (string,
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Create the JWT string
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString([]byte(jwtKeystring))
 
 	if err != nil {
 		log.Println("generateToken: Error creating tokenstring -->", err.Error())
@@ -89,7 +129,7 @@ func generateToken(username string, jwtKey byte, minutes time.Duration) (string,
 	return tokenString, expirationTime, nil
 }
 
-func generateApitoken(username string, jwtKey byte, days int) (string, error) {
+func generateApitoken(username string, jwtKeystring string, days int) (string, error) {
 	log.Print("generateApitoken:", username, "for", days, "days")
 
 	// get an expiration time days days from now
@@ -108,7 +148,7 @@ func generateApitoken(username string, jwtKey byte, days int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Create the JWT string
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString([]byte(jwtKeystring))
 	if err != nil {
 		log.Println("generateApitoken: Error creating tokenstring -->", err.Error())
 		return "fail", err
@@ -117,7 +157,7 @@ func generateApitoken(username string, jwtKey byte, days int) (string, error) {
 	return tokenString, nil
 }
 
-func checkToken(tokenstr string, jwtKey byte) (string, error) {
+func checkToken(tokenstr string, jwtKey []byte) (string, error) {
 	log.Println("checkToken: checking token", tokenstr)
 
 	// Initialize a new instance of `Claims`
