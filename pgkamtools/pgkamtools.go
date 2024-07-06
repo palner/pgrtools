@@ -38,7 +38,7 @@ import (
 
 type StructHtableDump struct {
 	Jsonrpc string `json:"jsonrpc"`
-	Id      int    `json:"id"`
+	Id      any    `json:"id"`
 	Result  []struct {
 		Entry any `json:"entry"`
 		Size  any `json:"size"`
