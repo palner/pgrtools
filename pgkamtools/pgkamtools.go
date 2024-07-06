@@ -37,30 +37,30 @@ import (
 )
 
 type StructHtableDump struct {
-	Jsonrpc string `json:"jsonrpc"`
-	Id      string `json:"id"`
+	Jsonrpc string          `json:"jsonrpc"`
+	Id      json.RawMessage `json:"id"`
 	Result  []struct {
 		Entry any `json:"entry"`
 		Size  any `json:"size"`
 		Slot  []struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-			Type  string `json:"type"`
+			Name  json.RawMessage `json:"name"`
+			Value json.RawMessage `json:"value"`
+			Type  string          `json:"type"`
 		} `json:"slot"`
 	} `json:"result"`
 }
 
 type StructNameValue struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  json.RawMessage `json:"name"`
+	Value json.RawMessage `json:"value"`
 }
 
 type StructName struct {
-	Name string `json:"name"`
+	Name json.RawMessage `json:"name"`
 }
 
 type StructValue struct {
-	Value string `json:"value"`
+	Value json.RawMessage `json:"value"`
 }
 
 func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) {
