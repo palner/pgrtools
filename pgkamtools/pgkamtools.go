@@ -21,9 +21,12 @@
 package pgkamtools
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +35,33 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
+
+type StructHtableDump struct {
+	Jsonrpc string `json:"jsonrpc"`
+	Id      int    `json:"id"`
+	Result  []struct {
+		Entry any `json:"entry"`
+		Size  any `json:"size"`
+		Slot  []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+			Type  string `json:"type"`
+		} `json:"slot"`
+	} `json:"result"`
+}
+
+type StructNameValue struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type StructName struct {
+	Name string `json:"name"`
+}
+
+type StructValue struct {
+	Value string `json:"value"`
+}
 
 func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) {
 	errstring := ""
@@ -239,26 +269,93 @@ func HtableParseNameOnly(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "{\"result\":result.#.slot.#[@flatten].name}")
-	return parsedval.String(), nil
+	var dump StructHtableDump
+	err := json.Unmarshal([]byte(jsonval), &dump)
+	if err != nil {
+		return "", err
+	}
+
+	tempparse := StructName{}
+	var parsedNameVal []StructName
+	for _, u := range dump.Result {
+		for _, s := range u.Slot {
+			tempparse.Name = s.Value
+			parsedNameVal = append(parsedNameVal, tempparse)
+		}
+	}
+
+	jsonByteData, err := json.MarshalIndent(parsedNameVal, "", "\t")
+	if err != nil {
+		jsonstr, _ := sjson.Set("", "error", true)
+		jsonstr, _ = sjson.Set(jsonstr, "details", err.Error())
+		return jsonstr, err
+	}
+
+	jsonStringData := string(jsonByteData)
+	return jsonStringData, nil
 }
 
 func HtableParseNameValue(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
-		return "", errors.New("invalid json")
+		return "", errors.New("invalid json received")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.#.slot.#[@flatten].{name,value}.@pretty")
-	return parsedval.String(), nil
+	var dump StructHtableDump
+	err := json.Unmarshal([]byte(jsonval), &dump)
+	if err != nil {
+		return "", err
+	}
+
+	tempparse := StructNameValue{}
+	var parsedNameVal []StructNameValue
+	for _, u := range dump.Result {
+		for _, s := range u.Slot {
+			tempparse.Name = s.Name
+			tempparse.Value = s.Value
+			parsedNameVal = append(parsedNameVal, tempparse)
+		}
+	}
+
+	jsonByteData, err := json.MarshalIndent(parsedNameVal, "", "\t")
+	if err != nil {
+		jsonstr, _ := sjson.Set("", "error", true)
+		jsonstr, _ = sjson.Set(jsonstr, "details", err.Error())
+		return jsonstr, err
+	}
+
+	jsonStringData := string(jsonByteData)
+	return jsonStringData, nil
 }
 
 func HtableParseValueOnly(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
-		return "", errors.New("invalid json")
+		return "", errors.New("invalid json received")
 	}
 
-	parsedval := gjson.Get(jsonval, "{\"result\":result.#.slot.#[@flatten].value}")
-	return parsedval.String(), nil
+	var dump StructHtableDump
+	err := json.Unmarshal([]byte(jsonval), &dump)
+	if err != nil {
+		return "", err
+	}
+
+	tempparse := StructValue{}
+	var parsedNameVal []StructValue
+	for _, u := range dump.Result {
+		for _, s := range u.Slot {
+			tempparse.Value = s.Value
+			parsedNameVal = append(parsedNameVal, tempparse)
+		}
+	}
+
+	jsonByteData, err := json.MarshalIndent(parsedNameVal, "", "\t")
+	if err != nil {
+		jsonstr, _ := sjson.Set("", "error", true)
+		jsonstr, _ = sjson.Set(jsonstr, "details", err.Error())
+		return jsonstr, err
+	}
+
+	jsonStringData := string(jsonByteData)
+	return jsonStringData, nil
 }
 
 func HtableParseValueSingle(jsonval string) (string, error) {
@@ -492,4 +589,30 @@ func getId() string {
 	timenow := time.Now().UnixMicro()
 	timenowstr := strconv.FormatInt(timenow, 10)
 	return timenowstr
+}
+
+func formatLastModifed(scientificNotationint int) (string, error) {
+	scientificNotation := strconv.Itoa(scientificNotationint)
+	flt, _, err := big.ParseFloat(scientificNotation, 10, 0, big.ToNearestEven)
+	if err != nil {
+		return "", err
+	}
+
+	fltVal := fmt.Sprintf("%.0f", flt)
+	intVal, err := strconv.ParseInt(fltVal, 10, 64)
+	if err != nil {
+		return "", err
+	}
+
+	lms := fmt.Sprint(uint(intVal))
+	var lastmodified string
+	i, err := strconv.ParseInt(lms, 10, 64)
+	if err != nil {
+		return "", err
+	} else {
+		tm := time.Unix(i, 0)
+		lastmodified = fmt.Sprint(tm)
+	}
+
+	return lastmodified, nil
 }
