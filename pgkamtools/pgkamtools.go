@@ -36,6 +36,14 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+type StructAoRParse struct {
+	AoR          json.RawMessage `json:"aor"`
+	Address      json.RawMessage `json:"address"`
+	Expires      json.RawMessage `json:"expires"`
+	UA           json.RawMessage `json:"user-agent"`
+	LastModified string          `json:"last-modified"`
+}
+
 type StructHtableDump struct {
 	Jsonrpc string          `json:"jsonrpc"`
 	Id      json.RawMessage `json:"id"`
@@ -57,6 +65,52 @@ type StructNameValue struct {
 
 type StructName struct {
 	Name json.RawMessage `json:"name"`
+}
+
+type StructUserDump struct {
+	Jsonrpc json.RawMessage `json:"jsonrpc"`
+	Id      json.RawMessage `json:"id"`
+	Result  struct {
+		Domains []struct {
+			Domain struct {
+				Domain json.RawMessage `json:"Domain"`
+				Size   json.RawMessage `json:"Size"`
+				AoRs   []struct {
+					Info struct {
+						AoR      json.RawMessage `json:"AoR"`
+						HashID   json.RawMessage `json:"HashID"`
+						Contacts []struct {
+							Contact struct {
+								Address       json.RawMessage `json:"Address,omitempty"`
+								Expires       json.RawMessage `json:"Expires,omitempty"`
+								Q             json.RawMessage `json:"Q,omitempty"`
+								CallID        json.RawMessage `json:"Call-ID,omitempty"`
+								CSeq          json.RawMessage `json:"CSeq,omitempty"`
+								UserAgent     json.RawMessage `json:"User-Agent,omitempty"`
+								Received      json.RawMessage `json:"Received,omitempty"`
+								Path          json.RawMessage `json:"Path,omitempty"`
+								Socket        json.RawMessage `json:"Socket,omitempty"`
+								Methods       json.RawMessage `json:"Methods,omitempty"`
+								Ruid          json.RawMessage `json:"Ruid,omitempty"`
+								Instance      json.RawMessage `json:"Instance,omitempty"`
+								RegID         json.RawMessage `json:"Reg-Id,omitempty"`
+								ServerID      json.RawMessage `json:"Server-Id,omitempty"`
+								TcpconID      json.RawMessage `json:"Tcpconn-Id,omitempty"`
+								Keepalive     json.RawMessage `json:"Keepalive,omitempty"`
+								LastKeepAlive json.RawMessage `json:"Last-Keepalive,omitempty"`
+								KARoundtrip   json.RawMessage `json:"KA-Roundtrip,omitempty"`
+								LastModified  json.RawMessage `json:"Last-Modified,omitempty"`
+							} `json:"Contact"`
+						} `json:"Contacts"`
+					} `json:"Info"`
+				} `json:"AoRs"`
+				Stats struct {
+					Records  json.RawMessage `json:"Records"`
+					MaxSlots json.RawMessage `json:"Max-Slots"`
+				} `json:"Stats"`
+			} `json:"Domain"`
+		} `json:"Domains"`
+	} `json:"result"`
 }
 
 type StructValue struct {
@@ -408,8 +462,35 @@ func RegAorParse(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
-	parsedval := gjson.Get(jsonval, "result.Contacts.#[@flatten].{Contact.Address,Contact.Expires,Contact.User-Agent}")
-	return parsedval.String(), nil
+	var dump StructUserDump
+	err := json.Unmarshal([]byte(jsonval), &dump)
+	if err != nil {
+		return "", err
+	}
+
+	userparse := StructAoRParse{}
+	var parsedUsers []StructAoRParse
+	for _, d := range dump.Result.Domains {
+		for _, a := range d.Domain.AoRs {
+			userparse.AoR = a.Info.AoR
+			for _, c := range a.Info.Contacts {
+				userparse.Address = c.Contact.Address
+				userparse.Expires = c.Contact.Expires
+				userparse.UA = c.Contact.UserAgent
+				lastmodified, _ := formatLastModifed(string(c.Contact.LastModified[:]))
+				userparse.LastModified = lastmodified
+				parsedUsers = append(parsedUsers, userparse)
+			}
+		}
+	}
+
+	jsonByteData, err := json.MarshalIndent(parsedUsers, "", "\t")
+	if err != nil {
+		return "", err
+	}
+
+	jsonStringData := string(jsonByteData)
+	return jsonStringData, nil
 }
 
 func RegsAors(jsonval string) (string, error) {
@@ -591,8 +672,7 @@ func getId() string {
 	return timenowstr
 }
 
-func formatLastModifed(scientificNotationint int) (string, error) {
-	scientificNotation := strconv.Itoa(scientificNotationint)
+func formatLastModifed(scientificNotation string) (string, error) {
 	flt, _, err := big.ParseFloat(scientificNotation, 10, 0, big.ToNearestEven)
 	if err != nil {
 		return "", err
