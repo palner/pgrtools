@@ -180,6 +180,11 @@ func DispatcherListSimple(urlval string) (string, error) {
 		return "", errors.New("invalid response from kamailio")
 	}
 
+	if gjson.Get(results, "error.message").Exists() {
+		errstring := gjson.Get(results, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	resultJson := gjson.Get(results, "result.RECORDS.#[@flatten].SET.TARGETS.#.DEST.URI")
 	var jsonResult string
 	for _, nodeValue := range resultJson.Array() {
@@ -201,6 +206,11 @@ func DispatcherListByGroup(urlval string) (string, error) {
 
 	if !gjson.Valid(results) {
 		return "", errors.New("invalid response from kamailio")
+	}
+
+	if gjson.Get(results, "error.message").Exists() {
+		errstring := gjson.Get(results, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	resultJson := gjson.Get(results, "result.RECORDS.#.SET.{id:ID,nodes:TARGETS.#.{uri:DEST.URI,flags:DEST.FLAGS,priority:DEST.PRIORITY,latency:DEST.LATENCY.AVG}}")
@@ -323,6 +333,11 @@ func HtableParseNameOnly(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	var dump StructHtableDump
 	err := json.Unmarshal([]byte(jsonval), &dump)
 	if err != nil {
@@ -352,6 +367,11 @@ func HtableParseNameOnly(jsonval string) (string, error) {
 func HtableParseNameValue(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json received")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	var dump StructHtableDump
@@ -386,6 +406,11 @@ func HtableParseValueOnly(jsonval string) (string, error) {
 		return "", errors.New("invalid json received")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	var dump StructHtableDump
 	err := json.Unmarshal([]byte(jsonval), &dump)
 	if err != nil {
@@ -415,6 +440,11 @@ func HtableParseValueOnly(jsonval string) (string, error) {
 func HtableParseValueSingle(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	parsedval := gjson.Get(jsonval, "result.item.{value:value}")
@@ -462,6 +492,11 @@ func RegAorParse(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	var dump StructUserDump
 	err := json.Unmarshal([]byte(jsonval), &dump)
 	if err != nil {
@@ -498,6 +533,11 @@ func RegsAors(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.Info.AoR")
 	return parsedval.String(), nil
 }
@@ -505,6 +545,11 @@ func RegsAors(jsonval string) (string, error) {
 func RegsFullContactInfo(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.{Info.AoR,Info.Contacts}.@ugly")
@@ -527,6 +572,11 @@ func RegsSimpleParse(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.AoRs.#.Info.{aor:AoR,details:Contacts.#.Contact.{address:Address,ua:User-Agent,expires:Expires,last-modified:Last-Modified}}")
 	return parsedval.String(), nil
 }
@@ -534,6 +584,11 @@ func RegsSimpleParse(jsonval string) (string, error) {
 func RegsTotal(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	parsedval := gjson.Get(jsonval, "result.Domains.#[@flatten].Domain.Stats.{Total_Registered:Records}")
@@ -639,6 +694,11 @@ func UptimeParse(jsonval string) (string, error) {
 		return "", errors.New("invalid json")
 	}
 
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
 	parsedval := gjson.Get(jsonval, "result.uptime")
 	return parsedval.String(), nil
 }
@@ -660,6 +720,11 @@ func Version(urlval string) (string, error) {
 func VersionParse(jsonval string) (string, error) {
 	if !gjson.Valid(jsonval) {
 		return "", errors.New("invalid json")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
 	}
 
 	parsedval := gjson.Get(jsonval, "result")
