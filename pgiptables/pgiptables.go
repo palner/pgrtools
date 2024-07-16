@@ -23,7 +23,6 @@ package pgiptables
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -91,8 +90,6 @@ func InitializeIPTables(ipt *iptables.IPTables) (string, error) {
 		return "chain exists", nil
 	}
 
-	log.Print("IPTABLES doesn't contain APIBANLOCAL. Creating now...")
-
 	// Add APIBAN chain
 	err = ipt.ClearChain("filter", chain)
 	if err != nil {
@@ -115,8 +112,6 @@ func InitializeIPTables(ipt *iptables.IPTables) (string, error) {
 }
 
 func IPtableHandle(proto string, task string, ipvar string) (string, error) {
-	log.Println("IPtableHandle:", proto, task, ipvar)
-
 	var ipProto iptables.Protocol
 	switch proto {
 	case "ipv6":
@@ -128,13 +123,11 @@ func IPtableHandle(proto string, task string, ipvar string) (string, error) {
 	// Go connect for IPTABLES
 	ipt, err := iptables.NewWithProtocol(ipProto)
 	if err != nil {
-		log.Println("IPtableHandle:", err)
 		return "", err
 	}
 
 	_, err = InitializeIPTables(ipt)
 	if err != nil {
-		log.Fatalln("IPtableHandler: failed to initialize IPTables:", err)
 		return "", err
 	}
 
@@ -142,7 +135,6 @@ func IPtableHandle(proto string, task string, ipvar string) (string, error) {
 	case "add":
 		err = ipt.AppendUnique("filter", "APIBANLOCAL", "-s", ipvar, "-d", "0/0", "-j", targetChain)
 		if err != nil {
-			log.Println("IPtableHandler: error adding address", err)
 			return "", err
 		} else {
 			return "added", nil
@@ -150,7 +142,6 @@ func IPtableHandle(proto string, task string, ipvar string) (string, error) {
 	case "delete":
 		err = ipt.DeleteIfExists("filter", "APIBANLOCAL", "-s", ipvar, "-d", "0/0", "-j", targetChain)
 		if err != nil {
-			log.Println("IPtableHandler: error removing address", err)
 			return "", err
 		} else {
 			return "deleted", nil
@@ -158,13 +149,11 @@ func IPtableHandle(proto string, task string, ipvar string) (string, error) {
 	case "flush":
 		err = ipt.ClearChain("filter", "APIBANLOCAL")
 		if err != nil {
-			log.Println("IPtableHandler:", proto, err)
 			return "", err
 		} else {
 			return "flushed", nil
 		}
 	default:
-		log.Println("IPtableHandler: unknown task")
 		return "", errors.New("unknown task")
 	}
 }

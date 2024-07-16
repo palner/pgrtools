@@ -24,20 +24,16 @@ package pgsqljson
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
 )
 
 func CheckFields(mapstring map[string]string, reqfields []string) string {
-	log.Print("checkFields: starting required fields check")
 	errstring := ""
 	for _, key := range reqfields {
-		if _, exists := mapstring[key]; exists {
-			log.Printf("checkfields: %s exists in map and has the value %v", key, mapstring[key])
-		} else {
-			log.Printf("checkfields: %s is not found", key)
+		if _, exists := mapstring[key]; !exists {
 			errstring += key + " is missing. "
 		}
 	}
@@ -46,10 +42,7 @@ func CheckFields(mapstring map[string]string, reqfields []string) string {
 }
 
 func ProcessResults(rows *sql.Rows) (string, error) {
-	log.Print("processResults: processing results from sql")
-
 	var err error
-
 	cols, _ := rows.Columns()
 	list := make([]map[string]interface{}, 0)
 	for rows.Next() {
@@ -73,10 +66,6 @@ func ProcessResults(rows *sql.Rows) (string, error) {
 	}
 
 	b, _ := json.MarshalIndent(list, "", "\t")
-	c, _ := json.Marshal(list)
-
-	log.Print("processResults result: ", string(c))
-
 	jsonString := string(b)
 
 	if err != nil {
@@ -87,7 +76,6 @@ func ProcessResults(rows *sql.Rows) (string, error) {
 }
 
 func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
-	log.Print("sendJsonhttp request: ", jsonstr, " ", urlstr)
 	var err error
 
 	// send json to url
@@ -105,7 +93,7 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	}
 
 	defer resp.Body.Close()
-	curlBody, err := ioutil.ReadAll(resp.Body)
+	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		// handle err
@@ -113,6 +101,5 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 		return "error", err
 	}
 
-	log.Print("curl response -> ", string(curlBody))
 	return string(curlBody), nil
 }

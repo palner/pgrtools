@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -35,30 +34,24 @@ import (
 )
 
 func Last10(val string) string {
-	log.Print("last10: checking ", val)
 	if len(val) >= 10 {
 		processedString := val[len(val)-10:]
-		log.Println("last10: returning", processedString)
 		return processedString
 	} else {
-		log.Print("last10:", val, "is less than 10 digits")
 		return val
 	}
 }
 
 func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) {
 	errstring := ""
-
 	for _, key := range reqfields {
 		if _, exists := mapstring[key]; exists {
 			if mapstring[key] != "" {
-				//log.Printf("checkfields: %s exists in map and has the value %v", key, mapstring[key])
+				// all good
 			} else {
-				log.Printf("checkfields: %s exists but has no value %v", key, mapstring[key])
 				errstring += key + " is missing. "
 			}
 		} else {
-			log.Printf("checkfields: %s is not found", key)
 			errstring += key + " is missing. "
 		}
 	}
@@ -109,13 +102,9 @@ func LowerKeys(keyVal map[string]string) map[string]string {
 
 func ParseBody(body []byte) map[string]string {
 	bodyVal := make(map[string]string)
-	log.Println("ParseBody: body received ->", string(body))
 	if json.Valid(body) {
-		log.Println("ParseBody: body is json")
 		json.Unmarshal(body, &bodyVal)
-		log.Println("ParseBody: body unmarshalled:", bodyVal)
 	} else {
-		log.Println("ParseBody: splitting based on &")
 		stringsplit := strings.Split(string(body), "&")
 		for _, pair := range stringsplit {
 			z := strings.Split(pair, "=")
@@ -126,7 +115,6 @@ func ParseBody(body []byte) map[string]string {
 				bodyVal[z[0]] = decodedValue
 			}
 		}
-		log.Println("ParseBody: body split:", bodyVal)
 	}
 
 	return bodyVal
@@ -134,13 +122,10 @@ func ParseBody(body []byte) map[string]string {
 
 func ParseBodyErr(body []byte) (map[string]string, error) {
 	bodyVal := make(map[string]string)
-	log.Println("ParseBody: parsing body")
 	if json.Valid(body) {
-		log.Println("ParseBody: body is json")
 		json.Unmarshal(body, &bodyVal)
 	} else {
 		if strings.Contains(string(body), "&") {
-			log.Println("ParseBody: splitting based on &")
 			stringsplit := strings.Split(string(body), "&")
 			for _, pair := range stringsplit {
 				z := strings.Split(pair, "=")
@@ -152,7 +137,6 @@ func ParseBodyErr(body []byte) (map[string]string, error) {
 				}
 			}
 		} else {
-			log.Println("ParseBody: unable to parse body")
 			return bodyVal, errors.New("unable to parse body. is it nil?")
 		}
 	}
@@ -162,22 +146,18 @@ func ParseBodyErr(body []byte) (map[string]string, error) {
 
 func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, error) {
 	bodyVal := make(map[string]string)
-	log.Println("ParseBodyFields: parsing body")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println("ParseBodyFields: error reading body:", err.Error())
 		return bodyVal, err
 	}
 
 	bodyVal, err = ParseBodyErr(body)
 	if err != nil {
-		log.Println("ParseBodyFields: error parsing body:", err.Error())
 		return bodyVal, err
 	}
 
 	_, err = CheckFields(bodyVal, reqfields)
 	if err != nil {
-		log.Println("ParseBodyFields: error parsing body:", err.Error())
 		return bodyVal, err
 	}
 
@@ -188,12 +168,10 @@ func PgParseForm(r *http.Request) (map[string]string, error) {
 	bodyVal := make(map[string]string)
 	err := r.ParseForm()
 	if err != nil {
-		log.Println("PgParseForm: error received -", err)
 		return bodyVal, err
 	}
 
 	for key := range r.Form {
-		log.Println("PgParseForm:", key, r.FormValue(key))
 		bodyVal[key] = r.FormValue(key)
 	}
 
@@ -204,18 +182,15 @@ func PgParseFormFields(r *http.Request, reqfields []string) (map[string]string, 
 	bodyVal := make(map[string]string)
 	err := r.ParseForm()
 	if err != nil {
-		log.Println("PgParseFormFields: error received -", err)
 		return bodyVal, err
 	}
 
 	for key := range r.Form {
-		log.Println("PgParseFormFields:", key, r.FormValue(key))
 		bodyVal[key] = r.FormValue(key)
 	}
 
 	_, err = CheckFields(bodyVal, reqfields)
 	if err != nil {
-		log.Println("PgParseFormFields: error parsing body:", err.Error())
 		return bodyVal, err
 	}
 

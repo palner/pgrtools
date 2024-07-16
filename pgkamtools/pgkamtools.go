@@ -25,7 +25,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -119,12 +118,8 @@ type StructValue struct {
 
 func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) {
 	errstring := ""
-
 	for _, key := range reqfields {
-		if _, exists := mapstring[key]; exists {
-			log.Printf("checkfields: %s exists in map and has the value %v", key, mapstring[key])
-		} else {
-			log.Printf("checkfields: %s is not found", key)
+		if _, exists := mapstring[key]; !exists {
 			errstring += key + " is missing. "
 		}
 	}
@@ -613,7 +608,6 @@ func RemoveDuplicatesUnordered(elements []string) []string {
 }
 
 func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
-	log.Print("sendJsonhttp request: ", jsonstr, " ", urlstr)
 	var err error
 
 	// send json to url
@@ -622,13 +616,11 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 
 	if err != nil {
 		// handle err
-		log.Print(err)
 		return "", err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Print(err)
 		return "", err
 	}
 
@@ -637,7 +629,6 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 
 	if err != nil {
 		// handle err
-		log.Print(err)
 		return "error", err
 	}
 
@@ -652,13 +643,11 @@ func SendGethttp(urlstr string) (string, error) {
 
 	if err != nil {
 		// handle err
-		log.Print(err)
 		return "error", err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Print(err)
 		return "error", err
 	}
 
@@ -667,11 +656,9 @@ func SendGethttp(urlstr string) (string, error) {
 
 	if err != nil {
 		// handle err
-		log.Print(err)
 		return "error", err
 	}
 
-	// log.Print("curl response -> ", string(curlBody))
 	return string(curlBody), nil
 }
 
