@@ -21,12 +21,14 @@
 package pgkamtools
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -635,6 +637,39 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	return string(curlBody), nil
 }
 
+func SendJsonhttpIgnoreCert(jsonstr string, urlstr string) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
+
+	// send json to url
+	sendbody := strings.NewReader(jsonstr)
+	req, err := http.NewRequest("POST", urlstr, sendbody)
+
+	if err != nil {
+		// handle err
+		return "", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		// handle err
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
 // send a get request via http and return the response
 func SendGethttp(urlstr string) (string, error) {
 	var err error
@@ -648,6 +683,39 @@ func SendGethttp(urlstr string) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		// handle err
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendGethttpIgnoreCert(urlstr string) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
+	req, err := http.NewRequest("GET", urlstr, nil)
+	if err != nil {
+		// handle err
+		return "error", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		if os.IsTimeout(err) {
+			return "timeout", err
+		}
+
 		return "error", err
 	}
 
