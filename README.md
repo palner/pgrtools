@@ -1,10 +1,10 @@
 # pgrtools
 
-Company Website: <https://www.pgpx.io>
+Company Website: [The Palner Group, Inc.](https://www.palner.com)
 
 ## Overview
 
-pgrtools (aka Palner Group tools) are designed to help with commonly needed functions in go (golang).
+pgrtools (**P**alner **Gr**oup **Tools**) are designed to help with commonly needed functions in go (golang).
 
 ## Usage Example
 
@@ -28,15 +28,13 @@ pgrtools (aka Palner Group tools) are designed to help with commonly needed func
 
 ## License 
 
-Man License: GPLv2.
+License: MIT
 
 ### License / Warranty
 
-The **pgrtools** code is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+**pgrtools** code is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-pgrtools is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
-
-pgrtools is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+pgrtools is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the MIT for more details.
 
 ## Contact
 
