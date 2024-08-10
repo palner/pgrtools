@@ -620,12 +620,17 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	// send json to url
 	sendbody := strings.NewReader(jsonstr)
 	req, err := http.NewRequest("POST", urlstr, sendbody)
-
 	if err != nil {
-		// handle err
 		return "", err
 	}
 
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
@@ -635,7 +640,39 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		// handle err
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendJsonhttpTimeout(jsonstr string, urlstr string, seconds time.Duration) (string, error) {
+	var err error
+
+	// send json to url
+	sendbody := strings.NewReader(jsonstr)
+	req, err := http.NewRequest("POST", urlstr, sendbody)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	http.DefaultClient.Timeout = seconds * time.Second
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
 		return "error", err
 	}
 
@@ -653,10 +690,14 @@ func SendJsonhttpIgnoreCert(jsonstr string, urlstr string) (string, error) {
 	// send json to url
 	sendbody := strings.NewReader(jsonstr)
 	req, err := http.NewRequest("POST", urlstr, sendbody)
-
 	if err != nil {
-		// handle err
 		return "", err
+	}
+
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
 	}
 
 	resp, err := client.Do(req)
@@ -668,7 +709,45 @@ func SendJsonhttpIgnoreCert(jsonstr string, urlstr string) (string, error) {
 	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		// handle err
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendJsonhttpIgnoreCertTimeout(jsonstr string, urlstr string, seconds time.Duration) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   seconds * time.Second,
+	}
+
+	// send json to url
+	sendbody := strings.NewReader(jsonstr)
+	req, err := http.NewRequest("POST", urlstr, sendbody)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
 		return "error", err
 	}
 
@@ -682,7 +761,6 @@ func SendGethttp(urlstr string) (string, error) {
 	req, err := http.NewRequest("GET", urlstr, nil)
 
 	if err != nil {
-		// handle err
 		return "error", err
 	}
 
@@ -695,7 +773,6 @@ func SendGethttp(urlstr string) (string, error) {
 	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		// handle err
 		return "error", err
 	}
 
@@ -711,7 +788,6 @@ func SendGethttpIgnoreCert(urlstr string) (string, error) {
 	client := &http.Client{Transport: tr, Timeout: 2 * time.Second}
 	req, err := http.NewRequest("GET", urlstr, nil)
 	if err != nil {
-		// handle err
 		return "error", err
 	}
 
@@ -728,7 +804,41 @@ func SendGethttpIgnoreCert(urlstr string) (string, error) {
 	curlBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		// handle err
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendGethttpIgnoreCertTimeout(urlstr string, seconds time.Duration) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   seconds * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", urlstr, nil)
+	if err != nil {
+		return "error", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		if os.IsTimeout(err) {
+			return "timeout", err
+		}
+
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
 		return "error", err
 	}
 

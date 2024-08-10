@@ -32,6 +32,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func CheckFields(mapstring map[string]string, reqfields []string) string {
@@ -85,12 +86,17 @@ func SendJsonhttp(jsonstr string, urlstr string) (string, error) {
 	// send json to url
 	sendbody := strings.NewReader(jsonstr)
 	req, err := http.NewRequest("POST", urlstr, sendbody)
-
 	if err != nil {
-		// handle err
 		log.Print(err)
 	}
 
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	http.DefaultClient.Timeout = 8 * time.Second
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Print(err)
