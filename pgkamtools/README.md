@@ -4,7 +4,7 @@ pgkamtools is Part of [pgrtools](https://github.com/palner/pgrtools). See main r
 
 pgkamtools is designed to help with commonly needed jsonrpc calls to kamailio.
 
-## Docucmentation Welcome
+## Documentation Welcome
 
 Documentation / contributions gladly accepted.
 
@@ -83,13 +83,28 @@ Expects
 
 * url (string) (url for kamailio rpc)
 
-### DipatcherListSimple
+### DispatcherListSimple
 
 Returns simplified list of dispatcher nodes
 
 Expects
 
 * url (string) (url for kamailio rpc)
+
+### DispatcherListByGroup
+
+Expects
+
+* url (string) (url for kamailio rpc)
+
+Returns
+
+* string (json)
+* error
+
+Example response:
+
+`[{"id":38,"nodes":[{"uri":"sip:172.16.1.1:5060","flags":"AP","priority":20},{"uri":"sip:172.16.0.1:5060","flags":"AP","priority":20}]}]`
 
 ### DispatcherRemove
 
@@ -111,7 +126,7 @@ Deletes a key from htables
 Expects
 
 * htable (string)
-* key (strint)
+* key (string)
 * url (string) (url for kamailio rpc)
 
 Returns
