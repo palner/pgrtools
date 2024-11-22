@@ -68,6 +68,28 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	}
 }
 
+func CheckFieldsAny(mapstring map[string]any, reqfields []string) (bool, error) {
+	errstring := ""
+	for _, key := range reqfields {
+		if _, exists := mapstring[key]; exists {
+			if mapstring[key] != "" {
+				// all good
+			} else {
+				errstring += key + " is missing. "
+			}
+		} else {
+			errstring += key + " is missing. "
+		}
+	}
+
+	if len(errstring) > 0 {
+		err := errors.New(errstring)
+		return false, err
+	} else {
+		return true, nil
+	}
+}
+
 func getNanoID() (string, error) {
 	id, err := nanoid.Standard(21)
 	if err != nil {
@@ -148,6 +170,30 @@ func ParseBodyErr(body []byte) (map[string]string, error) {
 	return bodyVal, nil
 }
 
+func ParseBodyErrAny(body []byte) (map[string]any, error) {
+	bodyVal := make(map[string]any)
+	if json.Valid(body) {
+		json.Unmarshal(body, &bodyVal)
+	} else {
+		if strings.Contains(string(body), "&") {
+			stringsplit := strings.Split(string(body), "&")
+			for _, pair := range stringsplit {
+				z := strings.Split(pair, "=")
+				decodedValue, err := url.QueryUnescape(z[1])
+				if err != nil {
+					bodyVal[z[0]] = z[1]
+				} else {
+					bodyVal[z[0]] = decodedValue
+				}
+			}
+		} else {
+			return bodyVal, errors.New("unable to parse body. is it nil?")
+		}
+	}
+
+	return bodyVal, nil
+}
+
 func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, error) {
 	bodyVal := make(map[string]string)
 	body, err := io.ReadAll(r.Body)
@@ -161,6 +207,26 @@ func ParseBodyFields(r *http.Request, reqfields []string) (map[string]string, er
 	}
 
 	_, err = CheckFields(bodyVal, reqfields)
+	if err != nil {
+		return bodyVal, err
+	}
+
+	return bodyVal, nil
+}
+
+func ParseBodyFieldsAny(r *http.Request, reqfields []string) (map[string]any, error) {
+	bodyVal := make(map[string]any)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return bodyVal, err
+	}
+
+	bodyVal, err = ParseBodyErrAny(body)
+	if err != nil {
+		return bodyVal, err
+	}
+
+	_, err = CheckFieldsAny(bodyVal, reqfields)
 	if err != nil {
 		return bodyVal, err
 	}
