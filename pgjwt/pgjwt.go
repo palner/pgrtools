@@ -27,11 +27,16 @@ package pgjwt
 
 import (
 	"errors"
+	"image/png"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 )
 
 func CheckAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
@@ -212,4 +217,30 @@ func CheckToken(tokenstr string, jwtKey []byte) (string, error) {
 	}
 
 	return claims.Username, nil
+}
+
+func TotpGenerate(issuer string, account string) (*otp.Key, error) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      issuer,
+		AccountName: account,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
+}
+
+func TotpQRcode(key *otp.Key) (string, error) {
+	img, err := key.Image(200, 200)
+	if err != nil {
+		return "", err
+	}
+
+	uuid := uuid.New()
+	file, _ := os.Create("/tmp/" + uuid.String() + ".png")
+	defer file.Close()
+	png.Encode(file, img)
+	return "/tmp/" + uuid.String() + ".png", nil
 }
