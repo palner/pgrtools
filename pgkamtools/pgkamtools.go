@@ -480,13 +480,17 @@ func RegGetAOR(aorval string, urlval string) (string, error) {
 		return "", err
 	}
 
-	parsed, err := RegAorParse(aorresult)
-
-	if err != nil {
-		return "", err
+	if !gjson.Valid(aorresult) {
+		return "", errors.New("invalid json")
 	}
 
-	return parsed, nil
+	if gjson.Get(aorresult, "error.message").Exists() {
+		errstring := gjson.Get(aorresult, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
+	parsedval := gjson.Get(aorresult, "result.Contacts.#.Contact.{Address,Expires,UA}")
+	return parsedval.String(), nil
 }
 
 func RegAorParse(jsonval string) (string, error) {
