@@ -110,6 +110,21 @@ func CheckGuiaccess(r *http.Request, cookiename string, jwtKeystring string) (st
 	return "ok", nil
 }
 
+func CheckGuiaccessUsername(r *http.Request, cookiename string, jwtKeystring string) (string, error) {
+	// We can obtain the session token from the requests cookies, which come with every request
+	tknStr, err := CheckCookie(r, cookiename)
+	if err != nil {
+		return "", err
+	}
+
+	username, err := CheckToken(tknStr, []byte(jwtKeystring))
+	if err != nil {
+		return "", err
+	}
+
+	return username, nil
+}
+
 func CheckCookie(r *http.Request, name string) (string, error) {
 	// Read the cookie as normal.
 	c, err := r.Cookie(name)
