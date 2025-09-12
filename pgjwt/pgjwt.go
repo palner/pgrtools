@@ -26,7 +26,9 @@ SOFTWARE.
 package pgjwt
 
 import (
+	"bytes"
 	"errors"
+	"image"
 	"image/png"
 	"net/http"
 	"os"
@@ -247,6 +249,24 @@ func TotpGenerate(issuer string, account string) (*otp.Key, error) {
 	return key, nil
 }
 
+func TotpGenerateImgSecret(issuer string, account string) (image.Image, string, error) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      issuer,
+		AccountName: account,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	image, err := key.Image(400, 400)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return image, key.Secret(), nil
+}
+
 func TotpQRcode(key *otp.Key) (string, error) {
 	img, err := key.Image(200, 200)
 	if err != nil {
@@ -258,4 +278,39 @@ func TotpQRcode(key *otp.Key) (string, error) {
 	defer file.Close()
 	png.Encode(file, img)
 	return "/tmp/" + uuid.String() + ".png", nil
+}
+
+func TotpQRcodeExport(key *otp.Key) (*bytes.Buffer, error) {
+	img, err := key.Image(200, 200)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := new(bytes.Buffer)
+	err = png.Encode(buf, img)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func TotpQRcodeImage(key *otp.Key) (image.Image, error) {
+	img, err := key.Image(200, 200)
+	if err != nil {
+		return nil, err
+	}
+
+	return img, nil
+}
+
+func DisplayQRCode(image image.Image, w http.ResponseWriter, r *http.Request) error {
+	// ... (create and draw on 'img' as shown above) ...
+	w.Header().Set("Content-Type", "image/png")
+	err := png.Encode(w, image)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
