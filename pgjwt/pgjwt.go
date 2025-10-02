@@ -27,9 +27,11 @@ package pgjwt
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"image"
 	"image/png"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -39,6 +41,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
+	"github.com/tidwall/sjson"
 )
 
 func CheckAuth(r *http.Request, keys map[string]string, jwtKeystring string) (string, error) {
@@ -313,4 +316,98 @@ func DisplayQRCode(image image.Image, w http.ResponseWriter, r *http.Request) er
 	}
 
 	return nil
+}
+
+func LastString(ss []string) string {
+	return ss[len(ss)-1]
+}
+
+func FirstString(ss []string) string {
+	return ss[0]
+}
+
+func HttpGet(urlstr string, seconds time.Duration) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   seconds * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", urlstr, nil)
+	if err != nil {
+		return "error", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		if os.IsTimeout(err) {
+			return "timeout", err
+		}
+
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func JwtParseGetCert(tokenString string) (jwt.MapClaims, string, error) {
+	// Parse and validate the JWT token
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	if err != nil {
+		return nil, "error", err
+	}
+
+	x5u, ok := token.Header["x5u"].(string)
+	if !ok || x5u == "" {
+		return nil, "error", errors.New("no x5u header found")
+	}
+
+	cert, err := HttpGet(x5u, 2)
+	if err != nil {
+		return nil, "error", err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, cert, nil
+	} else {
+		return nil, cert, err
+	}
+}
+
+func JSONHandleError(w http.ResponseWriter, r *http.Request, errCode string, errDesc string, httpCode int64) {
+	w.Header().Set("Content-Type", "application/json")
+	httpJson, _ := sjson.Set("", "response", httpCode)
+	httpJson, _ = sjson.Set(httpJson, "error", errCode)
+	httpJson, _ = sjson.Set(httpJson, "details", errDesc)
+	switch httpCode {
+	case 400:
+		w.WriteHeader(http.StatusBadRequest)
+	case 403:
+		w.WriteHeader(http.StatusForbidden)
+	case 404:
+		w.WriteHeader(http.StatusNotFound)
+	case 408:
+		w.WriteHeader(http.StatusRequestTimeout)
+	case 429:
+		w.WriteHeader(http.StatusTooManyRequests)
+	case 500:
+		w.WriteHeader(http.StatusInternalServerError)
+	case 503:
+		w.WriteHeader(http.StatusServiceUnavailable)
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	io.WriteString(w, httpJson+"\n")
 }
