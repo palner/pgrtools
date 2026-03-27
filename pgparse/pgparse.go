@@ -68,6 +68,19 @@ func CheckFields(mapstring map[string]string, reqfields []string) (bool, error) 
 	}
 }
 
+func CheckHoneypot(mapstring map[string]string, honeypot string) bool {
+	if _, exists := mapstring[honeypot]; exists {
+		if mapstring[honeypot] != "" {
+			// honeypot is present
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return false
+	}
+}
+
 func CheckFieldsAny(mapstring map[string]any, reqfields []string) (bool, error) {
 	errstring := ""
 	for _, key := range reqfields {
