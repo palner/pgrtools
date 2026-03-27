@@ -113,7 +113,7 @@ func CheckFieldsAny(mapstring map[string]any, reqfields []string) (bool, error) 
 	}
 }
 
-func CheckTurnstile(mapstring map[string]any, secret string, remoteip string) (bool, error) {
+func CheckTurnstile(mapstring map[string]string, secret string, remoteip string) (bool, error) {
 	if _, exists := mapstring["cf-turnstile-response"]; exists {
 		if mapstring["cf-turnstile-response"] == "" {
 			return false, errors.New("cf-turnstile-reponse is empty")
@@ -127,7 +127,7 @@ func CheckTurnstile(mapstring map[string]any, secret string, remoteip string) (b
 	// make paylod for cloudflare
 	payload := SendTurnstile{
 		Secret:   secret,
-		Token:    mapstring["cf-turnstile-response"].(string),
+		Token:    mapstring["cf-turnstile-response"],
 		RemoteIp: remoteip,
 		Uuid:     uuid,
 	}
