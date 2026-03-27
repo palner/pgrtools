@@ -26,16 +26,26 @@ SOFTWARE.
 package pgparse
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jaevor/go-nanoid"
+	"github.com/tidwall/gjson"
 )
+
+type SendTurnstile struct {
+	Secret   string `json:"secret"`
+	Token    string `json:"response"`
+	RemoteIp string `json:"remoteip"`
+	Uuid     string `json:"idempotency_key"`
+}
 
 func Last10(val string) string {
 	if len(val) >= 10 {
@@ -101,6 +111,68 @@ func CheckFieldsAny(mapstring map[string]any, reqfields []string) (bool, error) 
 	} else {
 		return true, nil
 	}
+}
+
+func CheckTurnstile(mapstring map[string]any, secret string, remoteip string) (bool, error) {
+	if _, exists := mapstring["cf-turnstile-response"]; exists {
+		if mapstring["cf-turnstile-response"] == "" {
+			return false, errors.New("cf-turnstile-reponse is empty")
+		}
+	} else {
+		return false, errors.New("cf-turnstile-reponse is not present")
+	}
+
+	uuid, _ := getNanoID()
+
+	// make paylod for cloudflare
+	payload := SendTurnstile{
+		Secret:   secret,
+		Token:    mapstring["cf-turnstile-response"].(string),
+		RemoteIp: remoteip,
+		Uuid:     uuid,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return false, err
+	}
+
+	// send json to url
+	req, err := http.NewRequest("POST", "https://challenges.cloudflare.com/turnstile/v0/siteverify", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return false, err
+	}
+
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	http.DefaultClient.Timeout = 2 * time.Second
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	if !gjson.Valid(string(curlBody)) {
+		return false, errors.New("invalid response from cloudlfare")
+	}
+
+	if gjson.Get(string(curlBody), "success").Exists() {
+		val := gjson.Get(string(curlBody), "success")
+		return val.Bool(), nil
+	} else {
+		return false, errors.New("success field not found in cloudflare response")
+	}
+
 }
 
 func getNanoID() (string, error) {
