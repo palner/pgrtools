@@ -162,6 +162,26 @@ jsonData, err := pgkamtools.HtableDump("ipban","http://localhost/RPC")
 
 ### HtableGet
 
+### HtableReload
+
+Reloads a hash table from the database. Requires the htable to be defined with a `dbtable` and the module to have a `db_url` set.
+
+Expects
+
+* htable (string)
+* url (string) (url for kamailio rpc)
+
+Returns
+
+* string (result from kamailio)
+* error
+
+Example
+
+```go
+result, err := pgkamtools.HtableReload("domains","http://localhost/RPC")
+```
+
 ### HtableSetInt
 
 ### HtableSetString
@@ -173,6 +193,19 @@ jsonData, err := pgkamtools.HtableDump("ipban","http://localhost/RPC")
 ### HtableParseValueOnly
 
 ### HtableParseValueOnly
+
+### HtableReloadParse
+
+Parses the response from `htable.reload`. Returns the result string, or an error carrying the fault message from Kamailio.
+
+Expects
+
+* json (string)
+
+Returns
+
+* string
+* error
 
 ### RegDeleteAOR
 

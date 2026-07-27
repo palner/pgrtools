@@ -297,6 +297,25 @@ func HtableGet(tableval string, keyval string, urlval string) (string, error) {
 	return parse, nil
 }
 
+func HtableReload(tableval string, urlval string) (string, error) {
+	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "method", "htable.reload")
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "params.htable", tableval)
+	sendJsonStr, _ = sjson.Set(sendJsonStr, "id", getId())
+	results, err := SendJsonhttp(sendJsonStr, urlval)
+
+	if err != nil {
+		return "", err
+	}
+
+	reloadResult, err := HtableReloadParse(results)
+	if err != nil {
+		return "", err
+	}
+
+	return reloadResult, nil
+}
+
 // changed 2023-01-18 to treat string as int in json for seti.
 func HtableSetInt(tableval string, keyval string, valval string, urlval string) (bool, error) {
 	sendJsonStr, _ := sjson.Set("", "jsonrpc", "2.0")
@@ -450,6 +469,20 @@ func HtableParseValueSingle(jsonval string) (string, error) {
 	}
 
 	parsedval := gjson.Get(jsonval, "result.item.{value:value}")
+	return parsedval.String(), nil
+}
+
+func HtableReloadParse(jsonval string) (string, error) {
+	if !gjson.Valid(jsonval) {
+		return "", errors.New("invalid json")
+	}
+
+	if gjson.Get(jsonval, "error.message").Exists() {
+		errstring := gjson.Get(jsonval, "error.message")
+		return "", errors.New(errstring.String())
+	}
+
+	parsedval := gjson.Get(jsonval, "result")
 	return parsedval.String(), nil
 }
 
