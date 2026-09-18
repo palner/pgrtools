@@ -756,6 +756,74 @@ func SendJsonhttpTimeout(jsonstr string, urlstr string, seconds time.Duration) (
 	return string(curlBody), nil
 }
 
+func SendJsonhttpTimeoutBasicAuth(jsonstr string, urlstr string, seconds time.Duration, username string, password string) (string, error) {
+	var err error
+
+	// send json to url
+	sendbody := strings.NewReader(jsonstr)
+	req, err := http.NewRequest("POST", urlstr, sendbody)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header = http.Header{
+		"Content-Type": {"application/json"},
+		"Accept":       {"application/json"},
+		"User-Agent":   {"pgrtools"},
+	}
+
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/json")
+	http.DefaultClient.Timeout = seconds * time.Second
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendJsonhttpTimeoutBearer(jsonstr string, urlstr string, seconds time.Duration, token string) (string, error) {
+	var err error
+
+	// send json to url
+	sendbody := strings.NewReader(jsonstr)
+	req, err := http.NewRequest("POST", urlstr, sendbody)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header = http.Header{
+		"Content-Type":  {"application/json"},
+		"Accept":        {"application/json"},
+		"User-Agent":    {"pgrtools"},
+		"Authorization": {"Bearer " + token},
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	http.DefaultClient.Timeout = seconds * time.Second
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
 func SendJsonhttpIgnoreCert(jsonstr string, urlstr string) (string, error) {
 	var err error
 	tr := &http.Transport{
@@ -903,6 +971,78 @@ func SendGethttpIgnoreCertTimeout(urlstr string, seconds time.Duration) (string,
 		return "error", err
 	}
 
+	resp, err := client.Do(req)
+	if err != nil {
+		if os.IsTimeout(err) {
+			return "timeout", err
+		}
+
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendGethttpIgnoreCertTimeoutBasicAuth(urlstr string, seconds time.Duration, username string, password string) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   seconds * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", urlstr, nil)
+	if err != nil {
+		return "error", err
+	}
+
+	req.SetBasicAuth(username, password)
+	resp, err := client.Do(req)
+	if err != nil {
+		if os.IsTimeout(err) {
+			return "timeout", err
+		}
+
+		return "error", err
+	}
+
+	defer resp.Body.Close()
+	curlBody, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return "error", err
+	}
+
+	return string(curlBody), nil
+}
+
+func SendGethttpIgnoreCertTimeoutBearer(urlstr string, seconds time.Duration, token string) (string, error) {
+	var err error
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{
+		Transport: tr,
+		Timeout:   seconds * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", urlstr, nil)
+	if err != nil {
+		return "error", err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
 		if os.IsTimeout(err) {
